@@ -2,3 +2,5 @@
 *venv
 *pycache*
 *.pem
+env_final_project
+.DS_Store
