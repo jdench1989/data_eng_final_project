@@ -49,5 +49,21 @@ def submissions():
     conn.close()
     return count[0]
 
+@app.route('/submissions_time')
+def submissions_time():
+    pass
+
+@app.route('/escs')
+def escs():
+    pass
+
+@app.route('/learning_hpw')
+def learning_time():
+    pass
+
+@app.route('/early_education_and_belonging')
+def early_education_and_belonging():
+    pass
+
 if __name__ == '__main__':
     app.run(debug=True)
