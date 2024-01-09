@@ -27,7 +27,7 @@ dag = DAG(
 ###### alb - ALBANIA #####
 choose_data = """
 SELECT count(*)
-FROM new_data_alb;
+FROM test;
 """
 
 def choosing_data(ti):
