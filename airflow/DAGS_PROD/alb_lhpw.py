@@ -24,20 +24,20 @@ dag = DAG(
 )
 
 ###### alb - ALBANIA #####
-choose_data = """
+choose_data_alb = """
 SELECT count(*)
 FROM test_alb;
 """
 
-def choosing_data(ti):
+def choosing_data_alb(ti):
     pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
-    results = pg_hook.get_records(choose_data)
+    results = pg_hook.get_records(choose_data_alb)
     if results[0][0] is None:
         ti.xcom_push(key='offset', value='0')
     else:
         ti.xcom_push(key='offset', value=results[0])
     
-t1 = PythonOperator(task_id="task1", python_callable = choosing_data, dag = dag )
+t1 = PythonOperator(task_id="task1", python_callable = choosing_data_alb, dag = dag )
 
 extract_data_alb_sql = """
 SELECT cnt, TMINS, escs, pared, hisei, homepos, durecec, belong
@@ -54,23 +54,70 @@ def extract_data_alb(ti):
 
 t2 = PythonOperator(task_id="task2", python_callable = extract_data_alb, dag = dag )
 
-def insert_data(ti):
+def insert_data_alb(ti):
     imported = ti.xcom_pull(key='results')
     pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
     target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
     pg_hook.insert_rows('test_alb', imported, target_fields)
 
-t3 = PythonOperator(task_id="task3", python_callable = insert_data, dag = dag )
+t3 = PythonOperator(task_id="task3", python_callable = insert_data_alb, dag = dag )
 
-def insert_data_all_countries(ti):
+def insert_data_all_countries_alb(ti):
     imported = ti.xcom_pull(key='results')
     pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
     target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
     pg_hook.insert_rows('test', imported, target_fields)
 
-t4 = PythonOperator(task_id="task4", python_callable = insert_data_all_countries, dag = dag )
+t4 = PythonOperator(task_id="task4", python_callable = insert_data_all_countries_alb, dag = dag )
 
-t1 >> t2 >> t3 >> t4
+###### arg - ARGENTINA #####
+choose_data_arg = """
+SELECT count(*)
+FROM test_arg;
+"""
+
+def choosing_data_arg(ti):
+    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
+    results = pg_hook.get_records(choose_data_arg)
+    if results[0][0] is None:
+        ti.xcom_push(key='offset', value='0')
+    else:
+        ti.xcom_push(key='offset', value=results[0])
+    
+t5 = PythonOperator(task_id="task5", python_callable = choosing_data_arg, dag = dag )
+
+extract_data_arg_sql = """
+SELECT cnt, TMINS, escs, pared, hisei, homepos, durecec, belong
+    FROM responses
+    OFFSET %s
+    LIMIT 1000;
+"""
+
+def extract_data_arg(ti):
+    imported = ti.xcom_pull(key = 'offset')
+    pg_hook = PostgresHook.get_hook('arg_source_db_connection_to_airflow')
+    results = pg_hook.get_records(extract_data_arg_sql, parameters = [imported])
+    ti.xcom_push(key='results', value=results) # comunica la tarea 3 con las otras tareas
+
+t6 = PythonOperator(task_id="task6", python_callable = extract_data_arg, dag = dag )
+
+def insert_data_arg(ti):
+    imported = ti.xcom_pull(key='results')
+    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
+    target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
+    pg_hook.insert_rows('test_arg', imported, target_fields)
+
+t7 = PythonOperator(task_id="task7", python_callable = insert_data_arg, dag = dag )
+
+def insert_data_all_countries_arg(ti):
+    imported = ti.xcom_pull(key='results')
+    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
+    target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
+    pg_hook.insert_rows('test', imported, target_fields)
+
+t8 = PythonOperator(task_id="task8", python_callable = insert_data_all_countries_arg, dag = dag )
+
+[t1, t5] >> [t2, t6] >> [t3, t7] >> t4 >> t8
 
 
 # from datetime import datetime, timedelta
