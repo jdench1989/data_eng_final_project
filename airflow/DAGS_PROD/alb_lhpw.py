@@ -41,7 +41,7 @@ def choosing_data(ti):
 t1 = PythonOperator(task_id="task1", python_callable = choosing_data, dag = dag )
 
 extract_data_alb_sql = """
-SELECT TMINS
+SELECT cnt, TMINS, escs, pared, hisei, homepos, durecec, belong
     FROM responses
     OFFSET %s
     LIMIT 1000;
@@ -55,68 +55,13 @@ def extract_data_alb(ti):
 
 t2 = PythonOperator(task_id="task2", python_callable = extract_data_alb, dag = dag )
 
-#inseta los datos en la db local
-
 def insert_data(ti):
     imported = ti.xcom_pull(key='results')
     pg_hook = PostgresHook.get_hook('analytical_db_connection')
     target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
     pg_hook.insert_rows('test', imported, target_fields)
 
-# OJO agregar las columnas a trabajar antes de correr el dag
-
 t3 = PythonOperator(task_id="task3", python_callable = insert_data, dag = dag )
-
-# create a new connection between this DAG and the analytical db and replaced on pg_hook
-
-
-###### arg - ARGENTINA #####
-# choose_data = """
-# SELECT count(*)
-# FROM new_data_arg;
-# """
-
-# def choosing_data(ti):
-#     pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
-#     results = pg_hook.get_records(choose_data)
-#     if results[0][0] is None:
-#         ti.xcom_push(key='offset', value='0')
-#     else:
-#         ti.xcom_push(key='offset', value=results[0])
-    
-# t1 = PythonOperator(task_id="task1", python_callable = choosing_data, dag = dag )
-
-# extract_data_arg_sql = """
-# SELECT TMINS
-#     FROM responses
-#     OFFSET %s
-#     LIMIT 1000;
-# """
-
-# def extract_data_alb(ti):
-#     imported = ti.xcom_pull(key = 'offset')
-#     pg_hook = PostgresHook.get_hook('alb_source_db_connection_to_airflow')
-#     results = pg_hook.get_records(extract_data_alb_sql, parameters = [imported])
-#     ti.xcom_push(key='results', value=results) # comunica la tarea 3 con las otras tareas
-
-# t2 = PythonOperator(task_id="task2", python_callable = extract_data_alb, dag = dag )
-
-# #inseta los datos en la db local
-
-# def insert_data(ti):
-#     imported = ti.xcom_pull(key='results')
-#     pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
-#     target_fields = ['TMINS']
-#     pg_hook.insert_rows('new_data_alb', imported, target_fields)
-
-# # OJO agregar las columnas a trabajar antes de correr el dag
-
-# t3 = PythonOperator(task_id="task3", python_callable = insert_data, dag = dag )
-
-# # create a new connection between this DAG and the analytical db and replaced on pg_hook
-
-
-
 
 t1 >> t2 >> t3 
 
