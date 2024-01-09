@@ -47,6 +47,7 @@ def submissions():
     count = cur.fetchall()
     cur.close()
     conn.close()
+    count[0]['count'] = int(count[0]['count'])
     return count[0]
 
 @app.route('/submissions_time')
