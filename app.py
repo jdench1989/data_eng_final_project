@@ -37,7 +37,7 @@ def get_db_connection():
         password=DB_PASSWORD,
         cursor_factory=psycopg2.extras.RealDictCursor,
     )
-    return json.dumps(conn)
+    return conn
 
 @app.route('/submissions')
 def submissions():
@@ -48,7 +48,7 @@ def submissions():
     cur.close()
     conn.close()
     count[0]['count'] = int(count[0]['count'])
-    return count[0]
+    return json.dumps(count[0])
 
 @app.route('/submissions_time')
 def submissions_time():
