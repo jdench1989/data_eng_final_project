@@ -15,7 +15,7 @@ default_args = {
 }
 
 dag = DAG(
-    'sql_dag',
+    'example_gina_dag',
     default_args=default_args,
     description='take all the data',
     schedule_interval=timedelta(minutes=2),
@@ -26,11 +26,11 @@ dag = DAG(
 ###### alb - ALBANIA #####
 choose_data = """
 SELECT count(*)
-FROM test;
+FROM test_alb;
 """
 
 def choosing_data(ti):
-    pg_hook = PostgresHook.get_hook('analytical_db_connection')
+    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
     results = pg_hook.get_records(choose_data)
     if results[0][0] is None:
         ti.xcom_push(key='offset', value='0')
@@ -56,13 +56,21 @@ t2 = PythonOperator(task_id="task2", python_callable = extract_data_alb, dag = d
 
 def insert_data(ti):
     imported = ti.xcom_pull(key='results')
-    pg_hook = PostgresHook.get_hook('analytical_db_connection')
+    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
     target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
-    pg_hook.insert_rows('test', imported, target_fields)
+    pg_hook.insert_rows('test_alb', imported, target_fields)
 
 t3 = PythonOperator(task_id="task3", python_callable = insert_data, dag = dag )
 
-t1 >> t2 >> t3 
+def insert_data_all_countries(ti):
+    imported = ti.xcom_pull(key='results')
+    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
+    target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
+    pg_hook.insert_rows('test', imported, target_fields)
+
+t4 = PythonOperator(task_id="task4", python_callable = insert_data_all_countries, dag = dag )
+
+t1 >> t2 >> t3 >> t4
 
 
 # from datetime import datetime, timedelta
