@@ -25,7 +25,7 @@ dag = DAG(
 )
 
 drop_new_data_alb = '''
-DROP TABLE aggregated_data_alb;
+DROP TABLE IF EXISTS aggregated_data_alb;
 '''
 
 t1 = PostgresOperator(
