@@ -4,6 +4,7 @@ from airflow import DAG
 
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
+from airflow.operators.empty import EmptyOperator
 
 default_args = {
     'owner': 'airflow',
@@ -117,7 +118,9 @@ def insert_data_all_countries_arg(ti):
 
 t8 = PythonOperator(task_id="task8", python_callable = insert_data_all_countries_arg, dag = dag )
 
-[t1, t5] >> [t2, t6] >> [t3, t7] >> t4 >> t8
+t00 = EmptyOperator(task_id='empty')
+
+t00 >> [t1, t5] >> [t2, t6] >> [t3, t7] >> t4 >> t8
 
 
 # from datetime import datetime, timedelta
