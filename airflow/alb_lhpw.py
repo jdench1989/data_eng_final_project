@@ -66,7 +66,7 @@ def extract_data():
     source_hook = PostgresHook(postgres_conn_id='alb_source_db_connection_to_airflow')
 
     extract_data_sql = """
-    SELECT id, cnt, tmins, escs, pared, hisei, homepos, durecec, belong
+    SELECT id, cnt, tmins, escs, pared, hisei, durecec, belong
     FROM responses;
 """
     extracted_data = source_hook.get_records(extract_data_sql)
@@ -79,14 +79,15 @@ def load_data(**kwargs):
     if extracted_data:
         for row in extracted_data:
             row = list(row)
-         
-            insert_query = "INSERT INTO test (submission_id, cnt, tmins, escs, pared, hisei, homepos, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
+            insert_query = "INSERT INTO test (submission_id, cnt, tmins, escs, pared, hisei, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
             destination_hook.run(insert_query, parameters=row)
             
-with DAG('postgres_data_transfer', 
-        default_args=default_args, 
-        schedule_interval=timedelta(minutes=7),
-        catchup=False
+with DAG('postgres_data_transfer',
+    default_args=default_args,
+    description='take all the data',
+    schedule_interval=timedelta(minutes=2),
+    start_date=datetime(2020, 4, 28),
+    catchup=False,
         ) as dag:
 
     extract_data_task = PythonOperator(
