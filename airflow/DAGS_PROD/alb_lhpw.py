@@ -60,7 +60,7 @@ t2 = PythonOperator(task_id="task2", python_callable = extract_data_alb, dag = d
 def insert_data(ti):
     imported = ti.xcom_pull(key='results')
     pg_hook = PostgresHook.get_hook('analytical_db_connection')
-    target_fields = ['TMINS']
+    target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
     pg_hook.insert_rows('test', imported, target_fields)
 
 # OJO agregar las columnas a trabajar antes de correr el dag
@@ -113,7 +113,7 @@ t3 = PythonOperator(task_id="task3", python_callable = insert_data, dag = dag )
 
 # t3 = PythonOperator(task_id="task3", python_callable = insert_data, dag = dag )
 
-# create a new connection between this DAG and the analytical db and replaced on pg_hook
+# # create a new connection between this DAG and the analytical db and replaced on pg_hook
 
 
 
