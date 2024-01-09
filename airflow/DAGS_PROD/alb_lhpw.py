@@ -56,7 +56,9 @@ def extract_data_alb(ti):
 t2 = PythonOperator(task_id="task2", python_callable = extract_data_alb, dag = dag )
 
 #inseta los datos en la db local
-
+insert_data_all_sql = """
+INSERT INTO test (tmins) VALUES ('5');
+"""
 def insert_data(ti):
     imported = ti.xcom_pull(key='results')
     pg_hook = PostgresHook.get_hook('analytical_db_connection')
