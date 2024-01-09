@@ -3,4 +3,5 @@
 *pycache*
 *.pem
 env_final_project
+data_final_project
 .DS_Store
