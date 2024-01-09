@@ -37,7 +37,7 @@ def get_db_connection():
         password=DB_PASSWORD,
         cursor_factory=psycopg2.extras.RealDictCursor,
     )
-    return conn
+    return json.dumps(conn)
 
 @app.route('/submissions')
 def submissions():
