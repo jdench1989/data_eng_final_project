@@ -18,11 +18,12 @@ default_args = {
 dag = DAG(
     'sql_dag',
     default_args=default_args,
-    description='A simple tutorial DAG',
+    description='take all the data',
     schedule_interval=timedelta(minutes=2),
     start_date=datetime(2020, 4, 28),
     catchup=False,
 )
+
 choose_data = """
 SELECT count(*)
 FROM new_data_alb;
@@ -52,7 +53,9 @@ def extract_data_alb(ti):
     ti.xcom_push(key='results', value=results) # comunica la tarea 3 con las otras tareas
 
 t2 = PythonOperator(task_id="task2", python_callable = extract_data_alb, dag = dag )
+
 #inseta los datos en la db local
+
 def insert_data(ti):
     imported = ti.xcom_pull(key='results')
     pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
@@ -62,7 +65,6 @@ def insert_data(ti):
 # OJO agregar las columnas a trabajar antes de correr el dag
 
 t3 = PythonOperator(task_id="task3", python_callable = insert_data, dag = dag )
-
 
 # create a new connection between this DAG and the analytical db and replaced on pg_hook
 
