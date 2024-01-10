@@ -5,6 +5,7 @@ import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
+from flask_cors import CORS
 
 load_dotenv()
 
@@ -26,6 +27,7 @@ elif DB_PASSWORD is None:
     raise ValueError('DB_PASSWORD is not set')
 
 app = Flask(__name__)
+CORS(app)
 # app.config['SECRET_KEY'] = FLASK_SECRET_KEY
 
 # Connect to the database
