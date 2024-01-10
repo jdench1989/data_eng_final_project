@@ -122,7 +122,7 @@ dag = DAG(
 
 country_list = ['alb', 'arg', 'aus', 'aut', 'bel', 'bgr',
                 'bih', 'blr', 'bra', 'brn', 'can', 'che',
-                'chi', 'col', 'cri', 'cze', 'deu', 'dnk',
+                'chl', 'col', 'cri', 'cze', 'deu', 'dnk',
                 'dom', 'esp']
 
 def choosing_data(**kwargs):
