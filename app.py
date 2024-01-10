@@ -1,6 +1,6 @@
 import json
 import os
-
+from OpenSSL import SSL
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
@@ -67,4 +67,5 @@ def early_education_and_belonging():
     pass
 
 if __name__ == '__main__':
-    app.run(debug=True, port = 5000, host='0.0.0.0', ssl_context='adhoc')
+    context = ("cert.pem", "key.pem")
+    app.run(debug=True, port = 5000, host='0.0.0.0', ssl_context=context)
