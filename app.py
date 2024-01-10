@@ -70,6 +70,7 @@ def escs():
     SELECT cnt AS id, AVG(escs) AS value 
     FROM int_test
     GROUP BY id
+    ORDER BY id
                 ''')
     escs = cur.fetchall()
     datasets["datasets"] = escs
@@ -91,6 +92,7 @@ def learning_time():
     SELECT cnt AS country, AVG(tmins)/60 AS hours 
     FROM int_test
     GROUP BY cnt
+    ORDER BY cnt
                 ''')
     hpw = cur.fetchall()
     datasets["datasets"] = hpw
