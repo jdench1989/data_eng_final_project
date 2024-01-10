@@ -151,7 +151,7 @@ def extract_data(**kwargs):
         LIMIT 1000;
         """
         imported = ti.xcom_pull(key = f'offset_{country_code}')
-        pg_hook = PostgresHook.get_hook(f'rds_source_db_{country}')
+        pg_hook = PostgresHook.get_hook(f'rds_source_db_{country_code}')
         results = pg_hook.get_records(extract_data_sql, parameters = [imported])
         ti.xcom_push(key=f'results_{country_code}', value=results) # comunica la tarea 3 con las otras tareas
 
