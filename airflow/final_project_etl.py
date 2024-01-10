@@ -16,6 +16,16 @@ def extract_and_load_data(source_conn_id, destination_conn_id):
             insert_query = "INSERT INTO test (submission_id, cnt, tmins, escs, pared, hisei, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
             destination_hook.run(insert_query, parameters=row)
 
+def record_total_submissions(source_conn_id, destination_conn_id):
+    source_hook = PostgresHook(postgres_conn_id=source_conn_id)
+    destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
+    count_sql = "SELECT COUNT(*) from test"
+    count = source_hook.get_records(count_sql)
+    time_hour = (datetime.now()).hour
+    params = [time_hour, count]
+    insert_sql = "INSERT INTO time (hour, submissions) VALUES (%s, %s)"
+    destination_hook.run(insert_sql, parameters = params)
+
 # Define the DAG
 default_args = {
     'owner': 'airflow',
@@ -24,8 +34,7 @@ default_args = {
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=2),
-    'start_date': datetime(2023, 11, 29),
-
+    'start_date': datetime(2024, 1, 10),
 }
 
 dag = DAG(
@@ -36,7 +45,7 @@ dag = DAG(
     catchup=False  # Decide if you want to backfill or not
 )
 
-source_db_country_list = ['alb', 'bra', 'col']
+source_db_country_list = ['alb', 'bra']
 # ['alb', 'arg', 'aus', 'aut', 'bel', 'bgr', 'bih', 'blr', 'bra', 'brn', 'can', 'che', 'chl', 'col', 'cri', 'cze', 'deu', 'dnk', 'dom', 'esp']
 # Use commented list once we are ready to bring more countries onboard
 
@@ -55,3 +64,13 @@ for country in source_db_country_list:
         provide_context=True,  # Pass task instance context
         dag=dag,
     )
+
+record_total_submissions_task = PythonOperator(
+        task_id='record_total_submissions_task',
+        python_callable=record_total_submissions,
+        op_kwargs={'source_conn_id': 'analytical_db_connection', 'destination_conn_id': 'analytical_db_connection'},
+        provide_context=True,  # Pass task instance context
+        dag=dag,
+    )
+
+extract_load_task >> record_total_submissions_task
