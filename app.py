@@ -59,13 +59,31 @@ def submissions_time():
 
 @app.route('/escs')
 def escs():
-    pass
+    conn = get_db_connection()
+    cur = conn.cursor()
+    datasets = {'datasets' : None}
+    cur.execute('''
+    WITH int_test AS(
+	SELECT cnt, cast(escs AS float)
+	FROM test
+	WHERE escs != 'NA')
+    SELECT cnt AS id, AVG(escs) AS value 
+    FROM int_test
+    GROUP BY id
+    ORDER BY id
+                ''')
+    escs = cur.fetchall()
+    datasets["datasets"] = escs
+    cur.close()
+    conn.close()
+   
+    return datasets
 
 @app.route('/learning_hpw')
 def learning_time():
     conn = get_db_connection()
     cur = conn.cursor()
-    datasets = {'datasets' : []}
+    datasets = {'datasets' : None}
     cur.execute('''
     WITH int_test AS(
 	SELECT cnt, cast(tmins AS int)
@@ -74,9 +92,10 @@ def learning_time():
     SELECT cnt AS country, AVG(tmins)/60 AS hours 
     FROM int_test
     GROUP BY cnt
+    ORDER BY cnt
                 ''')
     hpw = cur.fetchall()
-    datasets["datasets"].append(hpw[0]) 
+    datasets["datasets"] = hpw
     cur.close()
     conn.close()
    
@@ -86,7 +105,39 @@ def learning_time():
 
 @app.route('/early_education_and_belonging')
 def early_education_and_belonging():
-    pass
+    conn = get_db_connection()
+    cur = conn.cursor()
+    datasets = {'datasets' : None}
+    cur.execute('''
+    WITH int_test AS(
+	SELECT cnt,cast(durecec AS integer), cast(belong AS float)
+	FROM test
+	WHERE durecec != 'NA' AND belong != 'NA')
+    SELECT cnt AS id, ROUND(AVG(durecec),0) AS x, AVG(belong) AS y, COUNT(cnt) AS submissions
+    FROM int_test
+    GROUP BY cnt
+    ORDER BY cnt
+                ''')
+    results = cur.fetchall()
+    formatted_data = []
+
+    for result in results:
+        country_data = {
+            "id": result["id"],
+            "data": [
+                {
+                    "x": int(float(result["x"])),  # Convert x to an integer
+                    "y": float(result["y"]),      # Keep y as a float
+                    "submissions": int(result["submissions"])  # Convert submissions to an integer
+                }
+            ]
+        }
+        formatted_data.append(country_data)
+    final_output = {"datasets": formatted_data}
+    cur.close()
+    conn.close()
+   
+    return final_output
 
 if __name__ == '__main__':
     context = ("cert.pem", "key.pem")
