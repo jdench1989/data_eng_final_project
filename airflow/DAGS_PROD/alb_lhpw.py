@@ -18,7 +18,7 @@ dag = DAG(
     'example_gina_dag',
     default_args=default_args,
     description='take all the data',
-    schedule_interval=timedelta(minutes=2),
+    schedule_interval=timedelta(minutes=10),
     start_date=datetime(2020, 4, 28),
     catchup=False,
 )
