@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 def delete_data_from_table(source_conn_id):
     pg_hook = PostgresHook(postgres_conn_id=source_conn_id)
-    delete_sql_command = "DELETE FROM test'"
+    delete_sql_command = "DELETE FROM test"
     pg_hook.run(delete_sql_command, autocommit=True)
 
 # Define the function to extract and load data
