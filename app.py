@@ -105,7 +105,39 @@ def learning_time():
 
 @app.route('/early_education_and_belonging')
 def early_education_and_belonging():
-    pass
+    conn = get_db_connection()
+    cur = conn.cursor()
+    datasets = {'datasets' : None}
+    cur.execute('''
+    WITH int_test AS(
+	SELECT cnt,cast(durecec AS integer), cast(belong AS float)
+	FROM test
+	WHERE durecec != 'NA' AND belong != 'NA')
+    SELECT cnt AS id, ROUND(AVG(durecec),0) AS x, AVG(belong) AS y, COUNT(cnt) AS submissions
+    FROM int_test
+    GROUP BY cnt
+    ORDER BY cnt
+                ''')
+    results = cur.fetchall()
+    formatted_data = []
+
+    for result in results:
+        country_data = {
+            "id": result["id"],
+            "data": [
+                {
+                    "x": int(float(result["x"])),  # Convert x to an integer
+                    "y": float(result["y"]),      # Keep y as a float
+                    "submissions": int(result["submissions"])  # Convert submissions to an integer
+                }
+            ]
+        }
+        formatted_data.append(country_data)
+    final_output = {"datasets": formatted_data}
+    cur.close()
+    conn.close()
+   
+    return final_output
 
 if __name__ == '__main__':
     context = ("cert.pem", "key.pem")
