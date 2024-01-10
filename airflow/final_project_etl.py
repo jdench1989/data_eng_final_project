@@ -4,6 +4,11 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 
+def delete_data_from_table(source_conn_id):
+    pg_hook = PostgresHook(postgres_conn_id=source_conn_id)
+    delete_sql_command = "DELETE FROM test'"
+    pg_hook.run(delete_sql_command, autocommit=True)
+
 # Define the function to extract and load data
 def extract_and_load_data(source_conn_id, destination_conn_id):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
@@ -74,4 +79,10 @@ record_total_submissions_task = PythonOperator(
         dag=dag,
     )
 
-extract_load_task >> record_total_submissions_task
+delete_data_task = PythonOperator(
+    task_id='delete_data_from_table',
+    python_callable=delete_data_from_table,
+    dag=dag,
+)
+
+delete_data_task >> extract_load_task >> record_total_submissions_task
