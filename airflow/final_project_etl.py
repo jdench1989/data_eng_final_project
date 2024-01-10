@@ -11,10 +11,11 @@ def extract_and_load_data(source_conn_id, destination_conn_id):
     extract_data_sql = """SELECT id, cnt, tmins, escs, pared, hisei, durecec, belong FROM responses;"""
     extracted_data = source_hook.get_records(extract_data_sql)
     if extracted_data:
-        for row in extracted_data:
-            row = list(row)
-            insert_query = "INSERT INTO test (submission_id, cnt, tmins, escs, pared, hisei, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
-            destination_hook.run(insert_query, parameters=row)
+        destination_hook.insert_rows(table="test", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
+        # for row in extracted_data:
+        #     row = list(row)
+        #     insert_query = "INSERT INTO test (submission_id, cnt, tmins, escs, pared, hisei, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
+        #     destination_hook.run(insert_query, parameters=row)
 
 def record_total_submissions(source_conn_id, destination_conn_id):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
