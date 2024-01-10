@@ -5,6 +5,7 @@ import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
+from datetime import datetime
 
 load_dotenv()
 
@@ -60,7 +61,26 @@ def escs():
 
 @app.route('/learning_hpw')
 def learning_time():
-    pass
+    conn = get_db_connection()
+    cur = conn.cursor()
+    datasets = {'datasets' : []}
+    cur.execute('''
+    WITH int_test AS(
+	SELECT cnt, cast(tmins AS int)
+	FROM test
+	WHERE tmins != 'NA')
+    SELECT cnt AS country, AVG(tmins)/60 AS hours 
+    FROM int_test
+    GROUP BY cnt
+                ''')
+    hpw = cur.fetchall()
+    datasets["datasets"].append(hpw[0]) 
+    cur.close()
+    conn.close()
+   
+    return datasets
+
+
 
 @app.route('/early_education_and_belonging')
 def early_education_and_belonging():
