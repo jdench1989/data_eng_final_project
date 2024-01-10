@@ -20,7 +20,7 @@ def record_total_submissions(source_conn_id, destination_conn_id):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
     count_sql = "SELECT COUNT(*) from test"
-    count = source_hook.get_records(count_sql)
+    count = source_hook.get_records(count_sql)[0]
     time_hour = (datetime.now()).hour
     params = [time_hour, count]
     insert_sql = "INSERT INTO time (hour, submissions) VALUES (%s, %s)"
