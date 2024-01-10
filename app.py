@@ -59,7 +59,24 @@ def submissions_time():
 
 @app.route('/escs')
 def escs():
-    pass
+    conn = get_db_connection()
+    cur = conn.cursor()
+    datasets = {'datasets' : None}
+    cur.execute('''
+    WITH int_test AS(
+	SELECT cnt, cast(escs AS float)
+	FROM test
+	WHERE escs != 'NA')
+    SELECT cnt AS id, AVG(escs) AS value 
+    FROM int_test
+    GROUP BY id
+                ''')
+    escs = cur.fetchall()
+    datasets["datasets"] = escs
+    cur.close()
+    conn.close()
+   
+    return datasets
 
 @app.route('/learning_hpw')
 def learning_time():
