@@ -1,11 +1,12 @@
 import json
 import os
-
+from OpenSSL import SSL
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from datetime import datetime
+from flask_cors import CORS
 
 load_dotenv()
 
@@ -27,6 +28,7 @@ elif DB_PASSWORD is None:
     raise ValueError('DB_PASSWORD is not set')
 
 app = Flask(__name__)
+CORS(app)
 # app.config['SECRET_KEY'] = FLASK_SECRET_KEY
 
 # Connect to the database
@@ -87,4 +89,5 @@ def early_education_and_belonging():
     pass
 
 if __name__ == '__main__':
-    app.run(debug=True, port = 5000, host='0.0.0.0')
+    context = ("cert.pem", "key.pem")
+    app.run(debug=True, port = 5000, host='0.0.0.0', ssl_context=context)
