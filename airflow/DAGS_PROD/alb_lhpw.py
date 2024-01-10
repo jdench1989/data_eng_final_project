@@ -127,54 +127,57 @@ country_list = ['alb', 'arg', 'aus', 'aut', 'bel', 'bgr',
 
 def choosing_data(**kwargs):
     ti = kwargs['ti']
-    country_code = kwargs['country_code']
-    choose_data = f"""
-    SELECT count(*)
-    FROM test_{country_code};
-    """
-    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
-    results = pg_hook.get_records(choose_data)
-    if results[0][0] is None:
-        ti.xcom_push(key=f'offset_{country_code}', value='0')
-    else:
-        ti.xcom_push(key=f'offset_{country_code}', value=results[0])
+    country_list = kwargs['country_list']
+    for country_code in country_list:
+        choose_data = f"""
+        SELECT count(*)
+        FROM test_{country_code};
+        """
+        pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
+        results = pg_hook.get_records(choose_data)
+        if results[0][0] is None:
+            ti.xcom_push(key=f'offset_{country_code}', value='0')
+        else:
+            ti.xcom_push(key=f'offset_{country_code}', value=results[0])
 
 def extract_data(**kwargs):
     ti = kwargs['ti']
-    country_code = kwargs['country_code']
-    extract_data_sql = """
-    SELECT cnt, TMINS, escs, pared, hisei, homepos, durecec, belong
-    FROM responses
-    OFFSET %s
-    LIMIT 1000;
-    """
-    imported = ti.xcom_pull(key = f'offset_{country_code}')
-    pg_hook = PostgresHook.get_hook(f'rds_source_db_{country}')
-    results = pg_hook.get_records(extract_data_sql, parameters = [imported])
-    ti.xcom_push(key=f'results_{country_code}', value=results) # comunica la tarea 3 con las otras tareas
+    country_list = kwargs['country_list']
+    for country_code in country_list:
+        extract_data_sql = """
+        SELECT cnt, TMINS, escs, pared, hisei, homepos, durecec, belong
+        FROM responses
+        OFFSET %s
+        LIMIT 1000;
+        """
+        imported = ti.xcom_pull(key = f'offset_{country_code}')
+        pg_hook = PostgresHook.get_hook(f'rds_source_db_{country}')
+        results = pg_hook.get_records(extract_data_sql, parameters = [imported])
+        ti.xcom_push(key=f'results_{country_code}', value=results) # comunica la tarea 3 con las otras tareas
 
 def insert_data(**kwargs):
     ti = kwargs['ti']
-    country_code = kwargs['country_code']
-    imported = ti.xcom_pull(key=f'results_{country_code}')
-    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
-    target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
-    pg_hook.insert_rows(f'test_{country_code}', imported, target_fields)
+    country_list = kwargs['country_list']
+    for country_code in country_list:
+        imported = ti.xcom_pull(key=f'results_{country_code}')
+        pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
+        target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
+        pg_hook.insert_rows(f'test_{country_code}', imported, target_fields)
 
 def insert_data_all_countries(**kwargs):
     ti = kwargs['ti']
-    country_code = kwargs['country_code']
-    imported = ti.xcom_pull(key=f'results_{country_code}')
-    pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
-    target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
-    pg_hook.insert_rows('test', imported, target_fields)
+    country_list = kwargs['country_list']
+    for country_code in country_list:
+        imported = ti.xcom_pull(key=f'results_{country_code}')
+        pg_hook = PostgresHook.get_hook('analytical_db_connection_to_airflow')
+        target_fields = ['cnt', 'TMINS', 'escs', 'pared', 'hisei', 'homepos', 'durecec', 'belong']
+        pg_hook.insert_rows('test', imported, target_fields)
 
-for country in country_list:
-    t1 = PythonOperator(task_id=f"task1_{country}", python_callable = choosing_data, op_kwargs={'country_code': country}, dag = dag )
-    t2 = PythonOperator(task_id=f"task2_{country}", python_callable = extract_data, op_kwargs={'country_code': country}, dag = dag )
-    t3 = PythonOperator(task_id=f"task3_{country}", python_callable = insert_data, op_kwargs={'country_code': country}, dag = dag )
-    t4 = PythonOperator(task_id=f"task4_{country}", python_callable = insert_data_all_countries, op_kwargs={'country_code': country}, dag = dag )
-    t1 >> t2 >> t3 >> t4
+t1 = PythonOperator(task_id=f"task1", python_callable = choosing_data, op_kwargs={'country_list': country_list}, dag = dag )
+t2 = PythonOperator(task_id=f"task2", python_callable = extract_data, op_kwargs={'country_list': country_list}, dag = dag )
+t3 = PythonOperator(task_id=f"task3", python_callable = insert_data, op_kwargs={'country_list': country_list}, dag = dag )
+t4 = PythonOperator(task_id=f"task4", python_callable = insert_data_all_countries, op_kwargs={'country_list': country_list}, dag = dag )
+t1 >> t2 >> t3 >> t4
 
 
 # from datetime import datetime, timedelta
