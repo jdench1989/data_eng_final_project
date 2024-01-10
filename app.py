@@ -65,7 +65,7 @@ def escs():
 def learning_time():
     conn = get_db_connection()
     cur = conn.cursor()
-    datasets = {'datasets' : []}
+    datasets = {'datasets' : None}
     cur.execute('''
     WITH int_test AS(
 	SELECT cnt, cast(tmins AS int)
@@ -76,7 +76,7 @@ def learning_time():
     GROUP BY cnt
                 ''')
     hpw = cur.fetchall()
-    datasets["datasets"].append(hpw[0]) 
+    datasets["datasets"] = hpw
     cur.close()
     conn.close()
    
