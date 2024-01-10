@@ -82,6 +82,8 @@ record_total_submissions_task = PythonOperator(
 delete_data_task = PythonOperator(
     task_id='delete_data_from_table',
     python_callable=delete_data_from_table,
+    op_kwargs={'source_conn_id': 'analytical_db_connection'},
+    provide_context=True,  # Pass task instance context
     dag=dag,
 )
 
