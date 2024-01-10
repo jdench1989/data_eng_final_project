@@ -36,7 +36,7 @@ dag = DAG(
     catchup=False  # Decide if you want to backfill or not
 )
 
-source_db_country_list = ['alb']
+source_db_country_list = ['alb', 'arg', 'aus', 'aut', 'bel']
 # ['alb', 'arg', 'aus', 'aut', 'bel', 'bgr', 'bih', 'blr', 'bra', 'brn', 'can', 'che', 'chl', 'col', 'cri', 'cze', 'deu', 'dnk', 'dom', 'esp']
 # Use commented list once we are ready to bring more countries onboard
 
