@@ -27,8 +27,8 @@ def record_total_submissions(source_conn_id, destination_conn_id):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
     count_sql = "SELECT COUNT(*) from test"
-    count = source_hook.get_records(count_sql)[0]
-    last_run_count = Variable.get('total_submissions_last_run', default_var=0)
+    count = int(source_hook.get_records(count_sql)[0][0])
+    last_run_count = int(Variable.get('total_submissions_last_run', default_var=0))
     time_hour = (datetime.now()).hour
     subs_per_hour = count - last_run_count
     params = [time_hour, count, subs_per_hour]
