@@ -4,20 +4,30 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from airflow.models import Variable
+from airflow.operators.python_operator import PythonOperator
+from airflow.models import Variable, XCom
+
 
 # Define the function to extract and load data
-def extract_and_load_data(source_conn_id, destination_conn_id, country):
+def extract_and_load_data(source_conn_id, destination_conn_id, country, **kwargs):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
-    country_offset = int(Variable.get(f'test_extract_offset_{country}', default_var=0))
+    
+    # Retrieve the current country offset from XCom
+    country_offset = kwargs['ti'].xcom_pull(task_ids=f'extract_and_load_data_{country}', key='country_offset', default_var=0)
+    
     extract_data_sql = f"""SELECT id, cnt, tmins, escs, pared, hisei, durecec, belong FROM responses OFFSET {country_offset};"""
     extracted_data = source_hook.get_records(extract_data_sql)
     new_rows_count = len(extracted_data)
+    
+    # Update the country offset using XCom
     country_offset += new_rows_count
-    Variable.set(f'test_extract_offset_{country}', country_offset)
+    kwargs['ti'].xcom_push(task_ids=f'extract_and_load_data_{country}', key='country_offset', value=country_offset)
+    
     if extracted_data:
         destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
-    
+
+    Variable.set(f'test_extract_offset_{country}', country_offset)
 
 # Define the DAG
 default_args = {
@@ -54,7 +64,7 @@ for country in source_db_country_list:
         task_id=task_id,
         python_callable=extract_and_load_data,
         op_kwargs={'source_conn_id': source_conn_id, 'destination_conn_id': destination_conn_id, 'country': country},
-        provide_context=True,  # Pass task instance context
+        provide_context=False,  # Do not pass task instance context
         dag=dag,
     )
 
