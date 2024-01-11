@@ -58,6 +58,7 @@ for country in source_db_country_list:
         python_callable=extract_and_load_data,
         op_kwargs={'source_conn_id': source_conn_id, 'destination_conn_id': destination_conn_id, 'country': country},
         provide_context=True,  # Pass task instance context
+        wait_for_downstream = True,
         dag=dag,
     )
 
