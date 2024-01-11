@@ -16,7 +16,7 @@ def extract_and_load_all_data(**kwargs):
     for country in source_db_country_list:
         source_conn_id = f'rds_source_db_{country}'  # Replace with your connection IDs
         country_offset = int(Variable.get(f'test_extract_offset_{country}', default_var=0))
-        extract_data_sql = f"""SELECT id, cnt, tmins, escs, durecec, belong FROM responses OFFSET {country_offset} LIMIT 1000;"""
+        extract_data_sql = f"""SELECT id, cnt, tmins, escs, durecec, belong FROM responses OFFSET {country_offset};"""
 
         source_hook = PostgresHook(postgres_conn_id=source_conn_id)
         extracted_data = source_hook.get_records(extract_data_sql)
