@@ -18,7 +18,8 @@ def extract_and_load_data(source_conn_id, destination_conn_id, country):
     if extracted_data:
         destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
     live_count_sql = f"SELECT COUNT(*) from live WHERE cnt = '{country.upper()}'"
-    new_lines = int(destination_hook.run(live_count_sql))
+    live_count = destination_hook.run(live_count_sql)
+    new_lines = int(live_count)
     Variable.set(f'test_extract_offset_{country}', new_lines)
 
 # Define the DAG
