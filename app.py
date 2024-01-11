@@ -115,13 +115,12 @@ def learning_time():
 def early_education_and_belonging():
     conn = get_db_connection()
     cur = conn.cursor()
-    datasets = {'datasets' : None}
     cur.execute('''
     WITH int_test AS(
 	SELECT cnt,cast(durecec AS integer), cast(belong AS float)
 	FROM live
 	WHERE durecec != 'NA' AND belong != 'NA')
-    SELECT cnt AS id, ROUND(AVG(durecec),0) AS x, AVG(belong) AS y, COUNT(cnt) AS submissions
+    SELECT cnt AS id, AVG(durecec) AS x, AVG(belong) AS y, COUNT(cnt) AS submissions
     FROM int_test
     GROUP BY cnt
     ORDER BY cnt
