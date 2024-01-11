@@ -7,7 +7,7 @@ from airflow.models import Variable
 
 def delete_data_from_table(source_conn_id):
     pg_hook = PostgresHook(postgres_conn_id=source_conn_id)
-    delete_sql_command = "DELETE FROM test"
+    delete_sql_command = "DELETE FROM live"
     pg_hook.run(delete_sql_command, autocommit=True)
 
 # Define the function to extract and load data
@@ -17,16 +17,16 @@ def extract_and_load_data(source_conn_id, destination_conn_id):
     extract_data_sql = """SELECT id, cnt, tmins, escs, pared, hisei, durecec, belong FROM responses;"""
     extracted_data = source_hook.get_records(extract_data_sql)
     if extracted_data:
-        destination_hook.insert_rows(table="test", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
+        destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
         # for row in extracted_data:
         #     row = list(row)
-        #     insert_query = "INSERT INTO test (submission_id, cnt, tmins, escs, pared, hisei, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
+        #     insert_query = "INSERT INTO live (submission_id, cnt, tmins, escs, pared, hisei, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
         #     destination_hook.run(insert_query, parameters=row)
 
 def record_total_submissions(source_conn_id, destination_conn_id):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
-    count_sql = "SELECT COUNT(*) from test"
+    count_sql = "SELECT COUNT(*) from live"
     count = int(source_hook.get_records(count_sql)[0][0])
     last_run_count = int(Variable.get('total_submissions_last_run', default_var=0))
     time_hour = (datetime.now()).hour
