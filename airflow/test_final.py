@@ -15,10 +15,10 @@ def extract_and_load_data(source_conn_id, destination_conn_id, country):
     new_rows_count = len(extracted_data)
     country_offset += new_rows_count
     if extracted_data:
-        destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
+        destination_hook.insert_rows(table="test", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
         # for row in extracted_data:
         #     row = list(row)
-        #     insert_query = "INSERT INTO live (submission_id, cnt, tmins, escs, pared, hisei, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
+        #     insert_query = "INSERT INTO test (submission_id, cnt, tmins, escs, pared, hisei, durecec, belong) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (submission_id) DO NOTHING"
         #     destination_hook.run(insert_query, parameters=row)
     Variable.set(f'test_extract_offset_{country}', country_offset)
 
