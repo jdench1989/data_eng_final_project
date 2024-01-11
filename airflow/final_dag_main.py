@@ -13,10 +13,10 @@ def extract_and_load_data(source_conn_id, destination_conn_id, country):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
     country_offset = int(Variable.get(f'test_extract_offset_{country}', default_var=0))
-    extract_data_sql = f"""SELECT id, cnt, tmins, escs, pared, hisei, durecec, belong FROM responses OFFSET {country_offset};"""
+    extract_data_sql = f"""SELECT id, cnt, tmins, escs, durecec, belong FROM responses OFFSET {country_offset};"""
     extracted_data = source_hook.get_records(extract_data_sql)
     if extracted_data:
-        destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
+        destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "durecec", "belong"])
     live_count_sql = f"SELECT COUNT(*) from live WHERE cnt = '{country.upper()}';"
     live_count = destination_hook.get_records(live_count_sql)
     new_lines = int(live_count[0][0])
