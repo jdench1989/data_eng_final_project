@@ -9,7 +9,7 @@ from airflow.models import Variable
 def extract_and_load_data(source_conn_id, destination_conn_id, country):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
-    country_offset = Variable.get(f'test_extract_offset_{country}', default_var=0)
+    country_offset = int(Variable.get(f'test_extract_offset_{country}', default_var=0))
     extract_data_sql = f"""SELECT id, cnt, tmins, escs, pared, hisei, durecec, belong FROM responses OFFSET {country_offset};"""
     extracted_data = source_hook.get_records(extract_data_sql)
     new_rows_count = len(extracted_data)
