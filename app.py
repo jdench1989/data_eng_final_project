@@ -8,12 +8,9 @@ from flask import Flask, jsonify
 from datetime import datetime
 from flask_cors import CORS
 
-
-
 load_dotenv()
 
 # Load environment variables
-# FLASK_SECRET_KEY = os.getenv('FLASK_SECRET_KEY') or 'dev' ***Is this needed for anything?****
 DB_HOST = os.getenv('DB_HOST')
 DB_NAME = os.getenv('DB_NAME')
 DB_USERNAME = os.getenv('DB_USERNAME')
@@ -31,7 +28,6 @@ elif DB_PASSWORD is None:
 
 app = Flask(__name__)
 CORS(app)
-# app.config['SECRET_KEY'] = FLASK_SECRET_KEY
 
 # Connect to the database
 def get_db_connection():
@@ -48,14 +44,12 @@ def get_db_connection():
 def submissions():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) AS count FROM test")
+    cur.execute("SELECT COUNT(*) AS count FROM live")
     count = cur.fetchall()
     cur.close()
     conn.close()
     count[0]['count'] = int(count[0]['count'])
     return json.dumps(count[0])
-
-from flask import jsonify
 
 @app.route('/submissions_time')
 def submissions_time():
@@ -75,7 +69,6 @@ def submissions_time():
     conn.close()
     return jsonify(datasets)
 
-
 @app.route('/escs')
 def escs():
     conn = get_db_connection()
@@ -84,7 +77,7 @@ def escs():
     cur.execute('''
     WITH int_test AS(
 	SELECT cnt, cast(escs AS float)
-	FROM test
+	FROM live
 	WHERE escs != 'NA')
     SELECT cnt AS id, AVG(escs) AS value 
     FROM int_test
@@ -105,7 +98,7 @@ def learning_time():
     cur.execute('''
     WITH int_test AS(
 	SELECT cnt, cast(tmins AS int)
-	FROM test
+	FROM live
 	WHERE tmins != 'NA')
     SELECT cnt AS country, AVG(tmins)/60 AS hours 
     FROM int_test
@@ -116,10 +109,7 @@ def learning_time():
     datasets["datasets"] = hpw
     cur.close()
     conn.close()
-   
     return datasets
-
-
 
 @app.route('/early_education_and_belonging')
 def early_education_and_belonging():
@@ -129,7 +119,7 @@ def early_education_and_belonging():
     cur.execute('''
     WITH int_test AS(
 	SELECT cnt,cast(durecec AS integer), cast(belong AS float)
-	FROM test
+	FROM live
 	WHERE durecec != 'NA' AND belong != 'NA')
     SELECT cnt AS id, ROUND(AVG(durecec),0) AS x, AVG(belong) AS y, COUNT(cnt) AS submissions
     FROM int_test
@@ -138,7 +128,6 @@ def early_education_and_belonging():
                 ''')
     results = cur.fetchall()
     formatted_data = []
-
     for result in results:
         country_data = {
             "id": result["id"],
@@ -154,7 +143,6 @@ def early_education_and_belonging():
     final_output = {"datasets": formatted_data}
     cur.close()
     conn.close()
-   
     return final_output
 
 if __name__ == '__main__':
