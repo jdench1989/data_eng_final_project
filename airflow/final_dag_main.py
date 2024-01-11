@@ -36,7 +36,7 @@ dag = DAG(
     'etl_dag',
     default_args=default_args,
     description='Cycle through RDS databases for data extraction',
-    schedule_interval= '@hourly',  # Define your preferred schedule
+    schedule_interval= timedelta(minutes=1),  # Define your preferred schedule
     max_active_runs= 1,
     catchup=False  # Decide if you want to backfill or not
 )
