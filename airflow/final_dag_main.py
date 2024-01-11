@@ -26,7 +26,7 @@ def extract_and_load_all_data(**kwargs):
 
         live_count_sql = f"SELECT COUNT(*) from live WHERE cnt = '{country.upper()}';"
         live_count = int(destination_hook.get_records(live_count_sql)[0][0])
-        if live_count > country_offset:
+        if live_count != country_offset:
             new_offset = country_offset + live_count
             Variable.set(f'test_extract_offset_{country}', new_offset)
 
