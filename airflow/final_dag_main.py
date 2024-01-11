@@ -39,6 +39,7 @@ dag = DAG(
     description='Cycle through RDS databases for data extraction',
     schedule_interval= timedelta(minutes=1),  # Define your preferred schedule
     max_active_runs= 1,
+    concurrency=1,
     catchup=False  # Decide if you want to backfill or not
 )
 
@@ -58,7 +59,6 @@ for country in source_db_country_list:
         python_callable=extract_and_load_data,
         op_kwargs={'source_conn_id': source_conn_id, 'destination_conn_id': destination_conn_id, 'country': country},
         provide_context=True,  # Pass task instance context
-        depends_on_past = True,
         dag=dag,
     )
 
