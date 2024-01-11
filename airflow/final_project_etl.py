@@ -3,6 +3,7 @@ from airflow.models import Connection
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
+from airflow.models import Variable
 
 def delete_data_from_table(source_conn_id):
     pg_hook = PostgresHook(postgres_conn_id=source_conn_id)
@@ -27,10 +28,13 @@ def record_total_submissions(source_conn_id, destination_conn_id):
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
     count_sql = "SELECT COUNT(*) from test"
     count = source_hook.get_records(count_sql)[0]
+    last_run_count = Variable.get('total_submissions_last_run', default_var=0)
     time_hour = (datetime.now()).hour
-    params = [time_hour, count]
-    insert_sql = "INSERT INTO time (hour, submissions) VALUES (%s, %s)"
+    subs_per_hour = count - last_run_count
+    params = [time_hour, count, subs_per_hour]
+    insert_sql = "INSERT INTO time (hour, submissions, subs_per_hour) VALUES (%s, %s, %s)"
     destination_hook.run(insert_sql, parameters = params)
+    Variable.set('total_submissions_last_run', count)
 
 # Define the DAG
 default_args = {
