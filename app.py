@@ -4,9 +4,11 @@ from OpenSSL import SSL
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
-from flask import Flask, render_template, request
+from flask import Flask, jsonify
 from datetime import datetime
 from flask_cors import CORS
+
+
 
 load_dotenv()
 
@@ -53,9 +55,26 @@ def submissions():
     count[0]['count'] = int(count[0]['count'])
     return json.dumps(count[0])
 
+from flask import jsonify
+
 @app.route('/submissions_time')
 def submissions_time():
-    pass
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT hour, subs_per_hour FROM time')
+    sub_time = cur.fetchall()
+    datasets = {
+        "datasets": [
+            {
+                "id": "Submissions",
+                "data": [{"x": f"{entry['hour']:02}:00", "y": entry['subs_per_hour']} for entry in sub_time]
+            }
+        ]
+    }
+    cur.close()
+    conn.close()
+    return jsonify(datasets)
+
 
 @app.route('/escs')
 def escs():
@@ -76,7 +95,6 @@ def escs():
     datasets["datasets"] = escs
     cur.close()
     conn.close()
-   
     return datasets
 
 @app.route('/learning_hpw')
