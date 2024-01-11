@@ -8,15 +8,15 @@ from airflow.models import Variable
 def record_total_submissions(source_conn_id, destination_conn_id):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
-    count_sql = "SELECT COUNT(*) from test"
+    count_sql = "SELECT COUNT(*) from live"
     count = int(source_hook.get_records(count_sql)[0][0])
-    last_run_count = int(Variable.get('total_submissions_last_run_test', default_var=0))
+    last_run_count = int(Variable.get('total_submissions_last_run', default_var=0))
     time_hour = (datetime.now()).hour
     subs_per_hour = count - last_run_count
     params = [time_hour, count, subs_per_hour]
-    insert_sql = "INSERT INTO time_clone (hour, submissions, subs_per_hour) VALUES (%s, %s, %s)"
+    insert_sql = "INSERT INTO time (hour, submissions, subs_per_hour) VALUES (%s, %s, %s)"
     destination_hook.run(insert_sql, parameters = params)
-    Variable.set('total_submissions_last_run_test', count)
+    Variable.set('total_submissions_last_run', count)
 
     # Define the DAG
 default_args = {
@@ -30,7 +30,7 @@ default_args = {
 }
 
 dag = DAG(
-    'subs_per_hour',
+    'subs_per_hour_dag',
     default_args=default_args,
     description='Calculate new submissions per hour and store in DB time table',
     schedule_interval='@hourly',  # Define your preferred schedule
