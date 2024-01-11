@@ -14,9 +14,10 @@ def extract_and_load_data(source_conn_id, destination_conn_id, country):
     extracted_data = source_hook.get_records(extract_data_sql)
     new_rows_count = len(extracted_data)
     country_offset += new_rows_count
+    Variable.set(f'test_extract_offset_{country}', country_offset)
     if extracted_data:
         destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
-    Variable.set(f'test_extract_offset_{country}', country_offset)
+    
 
 # Define the DAG
 default_args = {
