@@ -22,7 +22,7 @@ def extract_and_load_all_data(**kwargs):
         extracted_data = source_hook.get_records(extract_data_sql)
 
         if extracted_data:
-            destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "durecec", "belong"])
+            destination_hook.insert_rows(table="live", rows=extracted_data, replace = True, target_fields=["submission_id", "cnt", "tmins", "escs", "durecec", "belong"])
 
         live_count_sql = f"SELECT COUNT(*) from live WHERE cnt = '{country.upper()}';"
         live_count = int(destination_hook.get_records(live_count_sql)[0][0])
