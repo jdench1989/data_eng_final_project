@@ -29,13 +29,13 @@ default_args = {
     'start_date': datetime(2024, 1, 10),
 }
 
-dag = DAG(
-    'subs_per_hour_dag',
-    default_args=default_args,
-    description='Calculate new submissions per hour and store in DB time table',
-    schedule_interval='@hourly',  # Define your preferred schedule
-    catchup=False  # Decide if you want to backfill or not
-)
+# dag = DAG(
+#     'igor_time_dag',
+#     default_args=default_args,
+#     description='Calculate new submissions per hour and store in DB time table',
+#     schedule_interval='@hourly',  # Define your preferred schedule
+#     catchup=False  # Decide if you want to backfill or not
+# )
 
 record_total_submissions_task = PythonOperator(
         task_id='record_total_submissions_task_test',

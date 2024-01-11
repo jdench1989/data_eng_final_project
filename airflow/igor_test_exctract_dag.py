@@ -9,15 +9,17 @@ from airflow.models import Variable, XCom
 
 
 # Define the function to extract and load data
-def extract_and_load_data(source_conn_id, destination_conn_id, country):
+def extract_data(source_conn_id, country):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
-    destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
     country_offset = int(Variable.get(f'test_extract_offset_{country}', default_var=0))
     extract_data_sql = f"""SELECT id, cnt, tmins, escs, durecec, belong FROM responses OFFSET {country_offset};"""
-    extracted_data = source_hook.get_records(extract_data_sql)
-    if extracted_data:
-        destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "durecec", "belong"])
-    live_count_sql = f"SELECT COUNT(*) from live WHERE cnt = '{country.upper()}';"
+    Variable.set(f'extracted_data_{country}', source_hook.get_records(extract_data_sql))
+
+def load_data(destination_conn_id, country):
+    destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
+    if f'extracted_data_{country}':
+        destination_hook.insert_rows(table="igor_test", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "durecec", "belong"])
+    live_count_sql = f"SELECT COUNT(*) from igor_test WHERE cnt = '{country.upper()}';"
     live_count = destination_hook.get_records(live_count_sql)
     new_lines = int(live_count[0][0])
     Variable.set(f'test_extract_offset_{country}', new_lines)
@@ -34,7 +36,7 @@ default_args = {
 }
 
 dag = DAG(
-    'etl_dag',
+    'igor_etl_dag',
     default_args=default_args,
     description='Cycle through RDS databases for data extraction',
     schedule_interval= timedelta(minutes=1),  # Define your preferred schedule
