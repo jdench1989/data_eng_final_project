@@ -9,24 +9,16 @@ from airflow.models import Variable, XCom
 
 
 # Define the function to extract and load data
-def extract_and_load_data(source_conn_id, destination_conn_id, country, **kwargs):
+def extract_and_load_data(source_conn_id, destination_conn_id, country):
     source_hook = PostgresHook(postgres_conn_id=source_conn_id)
     destination_hook = PostgresHook(postgres_conn_id=destination_conn_id)
-    
-    # Retrieve the current country offset from XCom
-    country_offset = kwargs['ti'].xcom_pull(task_ids=f'extract_and_load_data_{country}', key='country_offset', default_var=0)
-    
+    country_offset = int(Variable.get(f'test_extract_offset_{country}', default_var=0))
     extract_data_sql = f"""SELECT id, cnt, tmins, escs, pared, hisei, durecec, belong FROM responses OFFSET {country_offset};"""
     extracted_data = source_hook.get_records(extract_data_sql)
     new_rows_count = len(extracted_data)
-    
-    # Update the country offset using XCom
     country_offset += new_rows_count
-    kwargs['ti'].xcom_push(task_ids=f'extract_and_load_data_{country}', key='country_offset', value=country_offset)
-    
     if extracted_data:
         destination_hook.insert_rows(table="live", rows=extracted_data, target_fields=["submission_id", "cnt", "tmins", "escs", "pared", "hisei", "durecec", "belong"])
-
     Variable.set(f'test_extract_offset_{country}', country_offset)
 
 # Define the DAG
@@ -44,7 +36,7 @@ dag = DAG(
     'etl_dag',
     default_args=default_args,
     description='Cycle through RDS databases for data extraction',
-    schedule_interval= timedelta(minutes=1),  # Define your preferred schedule
+    schedule_interval= '@hourly',  # Define your preferred schedule
     max_active_runs= 1,
     catchup=False  # Decide if you want to backfill or not
 )
@@ -64,7 +56,7 @@ for country in source_db_country_list:
         task_id=task_id,
         python_callable=extract_and_load_data,
         op_kwargs={'source_conn_id': source_conn_id, 'destination_conn_id': destination_conn_id, 'country': country},
-        provide_context=False,  # Do not pass task instance context
+        provide_context=True,  # Pass task instance context
         dag=dag,
     )
 
