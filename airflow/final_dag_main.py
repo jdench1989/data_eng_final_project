@@ -17,17 +17,13 @@ def extract_and_load_all_data(**kwargs):
         source_conn_id = f'rds_source_db_{country}'  # Replace with your connection IDs
         country_offset = int(Variable.get(f'test_extract_offset_{country}', default_var=0))
         extract_data_sql = f"""SELECT id, cnt, tmins, escs, durecec, belong FROM responses OFFSET {country_offset};"""
-
         source_hook = PostgresHook(postgres_conn_id=source_conn_id)
         extracted_data = source_hook.get_records(extract_data_sql)
-
         if extracted_data:
             destination_hook.insert_rows(table="live", rows=extracted_data, replace = True, replace_index="id", target_fields=["id", "cnt", "tmins", "escs", "durecec", "belong"])
-
         live_count_sql = f"SELECT COUNT(*) from live WHERE cnt = '{country.upper()}';"
         live_count = int(destination_hook.get_records(live_count_sql)[0][0])
-        if live_count != country_offset:
-            Variable.set(f'test_extract_offset_{country}', live_count)
+        Variable.set(f'test_extract_offset_{country}', live_count)
 
 
 # Define the DAG
