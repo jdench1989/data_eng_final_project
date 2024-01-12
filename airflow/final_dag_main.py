@@ -23,7 +23,7 @@ def extract_and_load_all_data(**kwargs):
             destination_hook.insert_rows(table="live", rows=extracted_data, replace = True, replace_index="id", target_fields=["id", "cnt", "tmins", "escs", "durecec", "belong"])
         live_count_sql = f"SELECT COUNT(*) from live WHERE cnt = '{country.upper()}';"
         live_count = int(destination_hook.get_records(live_count_sql)[0][0])
-        Variable.set(f'test_extract_offset_{country}', live_count)
+        Variable.update(f'test_extract_offset_{country}', live_count)
 
 
 # Define the DAG
