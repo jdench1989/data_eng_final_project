@@ -36,7 +36,7 @@ default_args = {
 }
 
 dag = DAG(
-    'igor_etl_dag',
+    'igor_test_etl_dag',
     default_args=default_args,
     description='Cycle through RDS databases for data extraction',
     schedule_interval= timedelta(minutes=1),  # Define your preferred schedule
@@ -53,15 +53,24 @@ source_db_country_list = ['alb', 'arg', 'aus', 'aut', 'bel', 'bgr', 'bih', 'blr'
 for country in source_db_country_list:
     source_conn_id = f'rds_source_db_{country}'  # Replace with your connection IDs
     destination_conn_id = 'analytical_db_connection'  # Replace with your destination connection ID
-    task_id = f'extract_and_load_data_{country}'
+    extract_task_id = f'extract_data_{country}'
+    load_task_id = f'load_data_{country}'
     
     # Define the PythonOperator for each iteration
-    extract_load_task = PythonOperator(
-        task_id=task_id,
-        python_callable=extract_and_load_data,
-        op_kwargs={'source_conn_id': source_conn_id, 'destination_conn_id': destination_conn_id, 'country': country},
+    extract_task = PythonOperator(
+        task_id=extract_task_id,
+        python_callable=extract_data,
+        op_kwargs={'source_conn_id': source_conn_id, 'country': country},
         provide_context=True,  # Pass task instance context
         dag=dag,
     )
 
-extract_load_task
+    load_task = PythonOperator(
+        task_id=load_task_id,
+        python_callable=load_data,
+        op_kwargs={'destination_conn_id': destination_conn_id, 'country': country},
+        provide_context=True,  # Pass task instance context
+        dag=dag,
+    )    
+
+extract_task >> load_task
